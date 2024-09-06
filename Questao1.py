@@ -1,5 +1,66 @@
 import random
 import json
+import time
+
+def verificar_cartelas_batidas(cartelas, numeros_sorteados):
+    """Verifica se alguma cartela foi batida com os números sorteados."""
+    cartelas_batidas = []
+    
+    for numero_cartela, cartela in cartelas.items():
+        for linha in cartela:
+            # Verifica se todos os números da linha estão presentes nos números sorteados
+            linha_batida = True
+            for num in linha:
+                if num not in numeros_sorteados:
+                    linha_batida = False
+                    break
+            if linha_batida:
+                cartelas_batidas.append((numero_cartela, cartela))
+                break  # Uma vez que uma cartela é batida, não precisa checar as outras linhas
+    
+    return cartelas_batidas
+
+
+def sorteio_bingo(cartelas):
+    """Função para realizar o sorteio do bingo conforme os requisitos."""
+    numeros_disponiveis = list(range(1, 76))
+    numeros_sorteados = random.sample(numeros_disponiveis, 25)  # Sorteia 25 números únicos
+    
+    print("Números sorteados inicialmente:")
+    print(sorted(numeros_sorteados))
+    
+    while True:
+        # Verifica se houve cartelas batidas
+        cartelas_batidas = verificar_cartelas_batidas(cartelas, numeros_sorteados)
+        
+        if cartelas_batidas:
+            print("\nCartelas batidas:")
+            for numero, cartela in cartelas_batidas:
+                print(f"Cartela {numero}: {cartela}")
+            print(f"Números sorteados: {sorted(numeros_sorteados)}")
+            break
+        
+        # Se não houver cartelas batidas, sorteia uma nova dezena
+        if len(numeros_sorteados) < 75:
+            # Cria uma lista de números que ainda não foram sorteados
+            numeros_faltantes = []
+            for num in numeros_disponiveis:
+                if num not in numeros_sorteados:
+                    numeros_faltantes.append(num)
+            
+            # Sorteia um número dos números faltantes, se houver
+            if numeros_faltantes:
+                numero_sorteado = random.choice(numeros_faltantes)
+                numeros_sorteados.append(numero_sorteado)
+                print(f"Número sorteado: {numero_sorteado}")
+                time.sleep(2)  # Espera 2 segundos antes de sortear o próximo número
+            else:
+                print("Não há mais números disponíveis para sortear.")
+                break
+        else:
+            print("Número máximo de sorteios atingido.")
+            break
+
 
 def gerar_cartelas():
     num = int(input("Digite quantas cartelas você deseja criar: "))
@@ -39,12 +100,29 @@ def salvar_cartelas(cartelas):
 
 def imprimir_cartela(cartelas, numero_cartela):
     # Verifica se a cartela existe no dicionário
-    if numero_cartela in cartelas:
-        # Imprime a cartela no formato simples
-        print(f"{numero_cartela}: {cartelas[numero_cartela]}")
-    else:
-        print(f"Cartela número {numero_cartela} não encontrada.")
+    if numero_cartela not in cartelas:
+        print(f"A cartela {numero_cartela} não existe!")
+        return
 
+    # Pega a cartela a partir do número fornecido
+    cartela = cartelas[numero_cartela]
+
+    # Cabeçalhos das colunas (B, I, N, G, O)
+    headers = "  B    I    N    G    O "
+
+    # Imprimindo a cartela no formato solicitado
+    print("-" * 26)
+    print(f"Cartela: {numero_cartela}")
+    print("-" * 26)
+    print(headers)
+    print("-" * 26)
+
+    # Imprime cada linha das colunas da cartela
+    for i in range(5):  # Existem 5 linhas
+        linha = f"| {cartela[0][i]:2} | {cartela[1][i]:2} | {cartela[2][i]:2} | {cartela[3][i]:2} | {cartela[4][i]:2} |"
+        print(linha)
+    
+    print("-" * 25)
 
 def ler_cartelas():
     try:
@@ -68,7 +146,6 @@ def ler_cartelas():
     except FileNotFoundError:
         print("Arquivo 'cartelas.txt' não encontrado.")
         return None
-
 
 def menu_bingo():
     cartelas_geradas = None
@@ -95,7 +172,7 @@ def menu_bingo():
             else:
                 print("Nenhuma cartela gerada para salvar.")
         elif pergunta == "3":
-            ler_cartelas()
+            cartelas_geradas = ler_cartelas()
             print("Cartelas organizadas")
         elif pergunta == "4":
             if cartelas_geradas:  # Verifica se as cartelas já foram carregadas
@@ -106,9 +183,11 @@ def menu_bingo():
                     print("Por favor, insira um valor válido.")
             else:
                 print("Nenhuma cartela carregada. Gere ou leia as cartelas primeiro.")
-
         elif pergunta == "5":
-            print("Função de sorteio do bingo ainda não implementada.")
+            if cartelas_geradas:
+                sorteio_bingo(cartelas_geradas)
+            else:
+                print("Nenhuma cartela carregada. Gere ou leia as cartelas primeiro.")
         elif pergunta == "6":
             print("Saindo do programa. Até mais!")
             break
@@ -117,5 +196,3 @@ def menu_bingo():
 
 # Executar o menu principal
 menu_bingo()
-
-
